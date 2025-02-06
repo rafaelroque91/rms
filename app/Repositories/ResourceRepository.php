@@ -26,6 +26,7 @@ class ResourceRepository implements ResourceRepositoryInterface
         $resource = Resource::find($id);
         if ($resource) {
             $resource->update($data);
+
             return $resource;
         }
         return null;
