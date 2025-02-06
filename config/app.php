@@ -186,5 +186,6 @@ return [
     ])->toArray(),
 
     'pagination_size' => env('PAGINATION_SIZE', 100),
+    'cache_time' => env('CACHE_TIME', 100),
 
 ];
