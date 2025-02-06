@@ -185,4 +185,6 @@ return [
         // 'Example' => App\Facades\Example::class,
     ])->toArray(),
 
+    'pagination_size' => env('PAGINATION_SIZE', 100),
+
 ];
