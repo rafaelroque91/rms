@@ -7,7 +7,7 @@ services:
         image: 'postgres:15-alpine'
         working_dir: /application
         volumes:
-            - '.:/application'
+            - '.:/app'
         environment:
             - POSTGRES_USER=root
             - POSTGRES_PASSWORD=root
