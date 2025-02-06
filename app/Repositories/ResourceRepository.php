@@ -13,7 +13,7 @@ class ResourceRepository implements ResourceRepositoryInterface
 
     public function find($id)
     {
-        return Resource::find($id);
+        return Resource::findorFail($id);
     }
 
     public function create(array $data)
@@ -23,7 +23,7 @@ class ResourceRepository implements ResourceRepositoryInterface
 
     public function update($id, array $data)
     {
-        $resource = Resource::find($id);
+        $resource = Resource::findorFail($id);
         if ($resource) {
             $resource->update($data);
 
@@ -34,7 +34,7 @@ class ResourceRepository implements ResourceRepositoryInterface
 
     public function delete($id)
     {
-        $resource = Resource::find($id);
+        $resource = Resource::findorFail($id);
         if ($resource) {
             $resource->delete();
             return true;
