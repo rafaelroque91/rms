@@ -10,6 +10,7 @@ use App\Traits\ApiResponses;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\ResourceCollection;
+use Illuminate\Support\Facades\Cache;
 
 class ResourceController extends Controller
 {
@@ -21,13 +22,16 @@ class ResourceController extends Controller
 
     public function index() : ResourceCollection
     {
-        return new ResourceCollection($this->resourceService->getAllResources());
+        $resources = $this->resourceService->getAllResources();
+
+        return new ResourceCollection($resources);
     }
 
     public function store(StoreResourceRequest $request) : ResourcesResource|JsonResponse
     {
         try {
             $result = $this->resourceService->createResource($request->validated());
+            Cache::add("resource_{$result->id}", $result, config('app.pagination_size'));
             return new ResourcesResource($result);
         } catch (\Throwable $th) {
             return $this->error($th->getMessage(), 500);
@@ -37,7 +41,9 @@ class ResourceController extends Controller
     public function show($id) : ResourcesResource|JsonResponse
     {
         try {
-            $resource = $this->resourceService->getResourceById($id);
+            $resource = Cache::remember("resource_{$id}", config('app.pagination_size'), function () use ($id) {
+                return $this->resourceService->getResourceById($id);
+            });
             return new ResourcesResource($resource);
         } catch (ModelNotFoundException $e) {
             return $this->error($e->getMessage(), 404);
@@ -50,6 +56,8 @@ class ResourceController extends Controller
     {
         try {
             $result = $this->resourceService->updateResource($id, $request->validated());
+            Cache::forget('resources');
+            Cache::add("resource_{$result->id}", $result, config('app.pagination_size'));
             return new ResourcesResource($result);
         } catch (ModelNotFoundException $e) {
             return $this->error($e->getMessage(), 404);
@@ -62,7 +70,9 @@ class ResourceController extends Controller
     {
         try {
             $this->resourceService->deleteResource($id);
-            return response()->json(null, 204);
+            Cache::forget('resources');
+            Cache::forget("resource_{$id}");
+            return $this->success(null,null, 204);
         } catch (ModelNotFoundException $e) {
             return $this->error($e->getMessage(), 404);
         } catch (\Throwable $th) {

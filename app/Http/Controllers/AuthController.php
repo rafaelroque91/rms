@@ -27,7 +27,7 @@ class AuthController extends Controller
     {
         $user = $this->authService->register($request->all());
 
-        return $this->success('User registered successfully', 201, $user);
+        return $this->created('User registered successfully', $user);
     }
 
     /**
@@ -38,7 +38,7 @@ class AuthController extends Controller
     {
         try {
             $token = $this->authService->login($request->all());
-            return $this->success('Login successfull', 200, ['access_token' => $token, 'token_type' => 'Bearer']);
+            return $this->success('Login successfull', ['access_token' => $token, 'token_type' => 'Bearer']);
         } catch (ValidationException $e) {
             return $this->error($e->getMessage(), 401);
         }
@@ -51,6 +51,6 @@ class AuthController extends Controller
     public function logout(Request $request): JsonResponse
     {
         $this->authService->logout($request->user());
-        return $this->success('Logged out successfully');
+        return $this->success('Logged out successfully', 200);
     }
 }
