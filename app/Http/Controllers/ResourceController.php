@@ -3,13 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreResourceRequest;
+use App\Http\Requests\UpdateResourceRequest;
 use App\Http\Resources\ResourcesResource;
 use App\Services\ResourceService;
-use Illuminate\Http\Request;
+use App\Traits\ApiResponses;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
 class ResourceController extends Controller
 {
+    use ApiResponses;
     public function __construct(
         private readonly ResourceService $resourceService)
     {
@@ -22,36 +24,39 @@ class ResourceController extends Controller
 
     public function store(StoreResourceRequest $request)
     {
-        $result = $this->resourceService->createResource($request->validated());
-        return new ResourcesResource($result);
+        try {
+            $result = $this->resourceService->createResource($request->validated());
+            return new ResourcesResource($result);
+        } catch (\Throwable $th) {
+            return $this->error($th->getMessage(), 500);
+        }
     }
 
     public function show($id)
     {
         $resource = $this->resourceService->getResourceById($id);
         if (is_null($resource)) {
-            return response()->json(['message' => 'Resource not found'], 404);
+            return $this->error('Resource not found', 404);
         }
         return new ResourcesResource($resource);
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateResourceRequest $request, $id)
     {
-        $result = $this->resourceService->updateResource($id, $request->all());
-        if (isset($result['errors'])) {
-            return response()->json($result['errors'], 400);
+        try {
+            $result = $this->resourceService->updateResource($id, $request->validated());
+            return new ResourcesResource($result);
+        } catch (\Throwable $th) {
+            return $this->error($th->getMessage(), 500);
         }
-        if (is_null($result)) {
-            return response()->json(['message' => 'Resource not found'], 404);
-        }
-        return response()->json($result);
+
     }
 
     public function destroy($id)
     {
         $deleted = $this->resourceService->deleteResource($id);
         if (!$deleted) {
-            return response()->json(['message' => 'Resource not found'], 404);
+            return $this->error('Resource not found', 404);
         }
         return response()->json(null, 204);
     }
