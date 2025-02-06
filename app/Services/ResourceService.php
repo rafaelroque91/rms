@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Repositories\ResourceRepositoryInterface;
+use Illuminate\Support\Facades\Cache;
 
 class ResourceService
 {
@@ -18,21 +19,28 @@ class ResourceService
 
     public function getResourceById($id)
     {
-        return $this->resourceRepository->find($id);
+        return Cache::remember("resource_{$id}", config('app.pagination_size'), function () use ($id) {
+            return $this->resourceRepository->find($id);
+        });
     }
 
     public function createResource(array $data)
     {
-        return $this->resourceRepository->create($data);
+        $result = $this->resourceRepository->create($data);
+        Cache::add("resource_{$result->id}", $result, config('app.pagination_size'));
+        return $result;
     }
 
     public function updateResource($id, array $data)
     {
-        return $this->resourceRepository->update($id, $data);
+        $result = $this->resourceRepository->update($id, $data);
+        Cache::add("resource_{$result->id}", $result, config('app.pagination_size'));
+        return $result;
     }
 
-    public function deleteResource($id)
+    public function deleteResource($id): void
     {
-        return $this->resourceRepository->delete($id);
+        $this->resourceRepository->delete($id);
+        Cache::forget("resource_{$id}");
     }
 }
